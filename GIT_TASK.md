@@ -154,7 +154,7 @@ git add .
 
 got commit
 ```bash
-git commit -m "Ообавление файла .gitignore"
+git commit -m "Добавление файла .gitignore"
 ```
 
 git push
@@ -330,5 +330,5 @@ git branch -d jew_sausage
 ```bash
 git add.
 git commit -m "Финальные правки"
-git push git push git@github.com:EgorSinitsyn/sausage-store.git
+git push git@github.com:EgorSinitsyn/sausage-store.git
 ```
