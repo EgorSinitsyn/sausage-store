@@ -37,8 +37,20 @@ pipeline {
 
         stage('Save artifacts') {
             steps {
-                archiveArtifacts(artifacts: 'backend/target/sausage-store-0.0.1-SNAPSHOT.jar')
-                archiveArtifacts(artifacts: 'frontend/dist/frontend/*')
+                archiveArtifacts artifacts: 'backend/target/sausage-store-0.0.1-SNAPSHOT.jar'
+                archiveArtifacts artifacts: 'frontend/dist/frontend/*'
+
+                script {
+                    def chatId = '453143628'
+                    def botToken = '7036490341:AAGwX_b_MUgRy2wJz4q-fdkIxMr4ANU51eQ'
+                    def message = "Приложение успешно собрано."
+
+                    sh """
+                        curl -X POST -H 'Content-type: application/json' \
+                        --data '{"chat_id": "${chatId}", "text": "${message}"}' \
+                        https://api.telegram.org/bot${botToken}/sendMessage
+                    """
+                }
             }
         }
     }
