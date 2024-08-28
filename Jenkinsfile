@@ -1,27 +1,27 @@
 pipeline {
-    agent any // Выбираем Jenkins агента, на котором будет происходить сборка: нам нужен любой
+    agent any
 
     triggers {
-        pollSCM('H/5 * * * *') // Запускать будем автоматически по крону примерно раз в 5 минут
+        pollSCM('H/5 * * * *') // Запуск по крону
     }
 
     tools {
-        maven 'maven-3.9.9' // Для сборки бэкенда нужен Maven
-        jdk 'jdk-16' // И Java Developer Kit нужной версии
-        nodejs 'node-10' // А NodeJS нужен для фронта
+        maven 'maven-3.9.9'
+        jdk 'jdk-16'
+        nodejs 'node-10'
     }
 
     stages {
         stage('Build & Test backend') {
             steps {
-                dir("backend") { // Переходим в папку backend
-                    sh 'mvn package' // Собираем мавеном бэкенд
+                dir("backend") {
+                    sh 'mvn package'
                 }
             }
 
             post {
                 success {
-                    junit 'backend/target/surefire-reports/**/*.xml' // Передадим результаты тестов в Jenkins
+                    junit 'backend/target/surefire-reports/**/*.xml'
                 }
             }
         }
@@ -29,8 +29,8 @@ pipeline {
         stage('Build frontend') {
             steps {
                 dir("frontend") {
-                    sh 'npm install' // Для фронта сначала загрузим все сторонние зависимости
-                    sh 'npm run build' // Запустим сборку
+                    sh 'npm install'
+                    sh 'npm run build'
                 }
             }
         }
@@ -39,17 +39,26 @@ pipeline {
             steps {
                 archiveArtifacts artifacts: 'backend/target/sausage-store-0.0.1-SNAPSHOT.jar'
                 archiveArtifacts artifacts: 'frontend/dist/frontend/*'
+            }
 
-                script {
-                    def chatId = '453143628'
-                    def botToken = '7036490341:AAGwX_b_MUgRy2wJz4q-fdkIxMr4ANU51eQ'
-                    def message = "Приложение успешно собрано."
+            post {
+                success {
+                    script {
+                        // Получаем название ветки и убираем префикс origin/
+                        def branchName = env.GIT_BRANCH.replaceFirst(/^origin\//, '')
 
-                    sh """
-                        curl -X POST -H 'Content-type: application/json' \
-                        --data '{"chat_id": "${chatId}", "text": "${message}"}' \
-                        https://api.telegram.org/bot${botToken}/sendMessage
-                    """
+                        // Данные для отправки уведомления в Telegram
+                        def chatId = '453143628'
+                        def botToken = '7036490341:AAGwX_b_MUgRy2wJz4q-fdkIxMr4ANU51eQ'
+                        def message = "Приложение в ветке ${branchName} успешно собрано !!!"
+
+                        // Выполняем curl для отправки нотификации
+                        sh """
+                            curl -X POST -H 'Content-type: application/json' \
+                            --data '{"chat_id": "${chatId}", "text": "${message}"}' \
+                            https://api.telegram.org/bot${botToken}/sendMessage
+                        """
+                    }
                 }
             }
         }
